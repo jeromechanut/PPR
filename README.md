@@ -1,6 +1,6 @@
 # PPR
 
-![WPQM-shear-flow](https://raw.githubusercontent.com/dengwirda/PPR/master/img/WPQM-shear-flow.png)
+![WPQM-shear-flow](https://raw.githubusercontent.com/dengwirda/PPR/master/img/WPQM-shear-flow.png "width=100")
 
 The PPR pacakge is a Fortran library for high-order piecewise polynomial reconstruction and conservative integral re-mapping. Such operations can be used to construct high-order finite-volume and/or arbitrary lagrangian-eulerian type algorithms for the solution of hyperbolic transport problems.
 
