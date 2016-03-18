@@ -259,7 +259,7 @@
     !--------------------------- assemble new basis vector !
 
             call poly_basis(nord,ndof, &
-            &               sval,lvec)
+        &                   sval,lvec)
 
             do  idof = +1,ndof
             
