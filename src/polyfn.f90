@@ -223,7 +223,7 @@
     !   NDOF - no. degrees-of-freedom.                               !
     !   FHAT - NDOF-by-1 array of coefficients.                      !
     !   SVAL - local coordinate, -1.d0 <= SVAL <= +1.d0.             !
-    !   BVEC - NDOF-by-1 basis vector.                          !
+    !   BVEC - NDOF-by-1 basis vector.                               !
     !----------------------------------------------------------------!
     function poly_value(nord,ndof,fhat,sval, &
         &               bvec) result  (rval)
