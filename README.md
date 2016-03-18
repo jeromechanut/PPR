@@ -1,8 +1,8 @@
 # PPR
 
 <p align="center">
- <img src="../master/img/W-PQM-shear-1.png">
- <img src="../master/img/W-PQM-shear-2.png">
+ <img src="../master/img/W-PQM-shear-1.png"> &nbsp &nbsp
+ <img src="../master/img/W-PQM-shear-2.png"> &nbsp &nbsp
  <img src="../master/img/W-PQM-shear-3.png">
 </p>
 
