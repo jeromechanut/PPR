@@ -29,50 +29,84 @@
     !
 
     !    
-    ! PCM.f90: 1d piecewise constant reconstruction .
+    ! ROOT1D.f90: find the "roots" of degree-k polynomials.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
+    ! 25-Mar-2019
     ! de2363 [at] columbia [dot] edu
     !
     !
 
-    pure subroutine pcm(npos,nvar,ndof,fdat, &
-        &               fhat)
+    pure subroutine roots_2(aa,bb,cc,xx,haveroot)
 
     !
-    ! NPOS  no. edges over grid.
-    ! NVAR  no. state variables.
-    ! NDOF  no. degrees-of-freedom per grid-cell .
-    ! FDAT  grid-cell moments array. FDAT is an array with
-    !       SIZE = NDOF-by-NVAR-by-NPOS-1 .
-    ! FHAT  grid-cell re-con. array. FHAT is an array with
-    !       SIZE = MDOF-by-NVAR-by-NPOS-1 .
+    ! solve:: aa * xx**2 + bb * xx**1 + cc = +0.0 .
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        real*8 , intent( in) :: aa,bb,cc
+        real*8 , intent(out) :: xx(1:2)
+        logical, intent(out) :: haveroot
 
     !------------------------------------------- variables !
-        integer:: ipos,ivar,idof
+        real*8 :: sq,ia,a0,b0,c0,x0
 
-        do  ipos = +1, npos - 1
-        do  ivar = +1, nvar + 0
-        do  idof = +1, ndof + 0
+        real*8, parameter :: rt = +1.d-14
 
-            fhat(idof,ivar,ipos) = fdat(idof,ivar,ipos)
+        a0 = abs(aa)
+        b0 = abs(bb)
+        c0 = abs(cc)
 
-        end do
-        end do
-        end do
-        
+        sq = bb * bb - 4.0d+0 * aa * cc
+
+        if (sq .ge. 0.0d+0) then
+
+            sq = sqrt (sq)
+
+            xx(1) =  - bb + sq
+            xx(2) =  - bb - sq
+
+            x0 = max(abs(xx(1)), &
+        &            abs(xx(2)))
+
+            if (a0 .gt. (rt*x0)) then
+
+    !-------------------------------------- degree-2 roots !
+    
+            haveroot =  .true.
+
+            ia = 0.5d+0   / aa
+
+            xx(1) = xx(1) * ia
+            xx(2) = xx(2) * ia
+            
+            else &
+        &   if (b0 .gt. (rt*c0)) then
+
+    !-------------------------------------- degree-1 roots !
+
+            haveroot =  .true.
+            
+            xx(1) =  - cc / bb
+            xx(2) =  - cc / bb
+            
+            else
+            
+            haveroot = .false.
+            
+            end if
+
+        else
+
+            haveroot = .false.
+
+        end if
+
         return
 
     end subroutine
-    
-    
-    
+
+
+
