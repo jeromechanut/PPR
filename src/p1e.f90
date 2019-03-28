@@ -1,28 +1,63 @@
 
+    !-------------------------------------------------------
     !
-    ! P1E.f90: degree-1 interpolation for edge values/slopes.
+    ! This program may be freely redistributed under the 
+    ! condition that the copyright notices (including this 
+    ! entire header) are not removed, and no compensation 
+    ! is received through use of the software.  Private, 
+    ! research, and institutional use is free.  You may 
+    ! distribute modified versions of this code UNDER THE 
+    ! CONDITION THAT THIS CODE AND ANY MODIFICATIONS MADE 
+    ! TO IT IN THE SAME FILE REMAIN UNDER COPYRIGHT OF THE 
+    ! ORIGINAL AUTHOR, BOTH SOURCE AND OBJECT CODE ARE 
+    ! MADE FREELY AVAILABLE WITHOUT CHARGE, AND CLEAR 
+    ! NOTICE IS GIVEN OF THE MODIFICATIONS.  Distribution 
+    ! of this code as part of a commercial system is 
+    ! permissible ONLY BY DIRECT ARRANGEMENT WITH THE 
+    ! AUTHOR.  (If you are not directly supplying this 
+    ! code to a customer, and you are instead telling them 
+    ! how they can obtain it for free, then you are not 
+    ! required to make any arrangement with me.) 
     !
-    ! Darren Engwirda 
-    ! 17-Mar-2016
-    ! engwirda [at] mit [dot] edu
+    ! Disclaimer:  Neither I nor: Columbia University, the 
+    ! National Aeronautics and Space Administration, nor 
+    ! the Massachusetts Institute of Technology warrant 
+    ! or certify this code in any way whatsoever.  This 
+    ! code is provided "as-is" to be used at your own risk.
+    !
+    !-------------------------------------------------------
     !
 
-	!----------------------------------------------------------------!
-    ! P1E: approximate edge values with degree-1 polynomials.        !
-    !----------------------------------------------------------------!
-    !   DELX - NPOS-1-by-1 array of grid coordinates. Grid spacing   !
-    !          can be non-uniform.                                   !
-    !   FDAT - NDOF-by-NVAR-by-NPOS-1 array of cell-wise moments for !
-    !          NVAR discrete variables.                              !
-    !   EDGE - 2-by-NVAR-by-NPOS-1 array of interpolated edge values !
-    !          for each grid-cell. EDGE(1,:,IPOS) and EDGE(2,:,IPOS) !
-    !          store the lower/upper edge values for grid-cell IPOS. !
-    !   DFDX - 2-by-NVAR-by-NPOS-1 array of interpolated edge slopes !
-    !          for each grid-cell. DFDX(1,:,IPOS) and DFDX(2,:,IPOS) !
-    !          store the lower/upper edge slopes for grid-cell IPOS. !
-    !----------------------------------------------------------------!
-    subroutine p1e(npos,nvar,ndof,delx,fdat, &
-        &          edge,dfdx)
+    !    
+    ! P1E.f90: set edge estimates via degree-1 polynomials.
+    !
+    ! Darren Engwirda 
+    ! 09-Sep-2016
+    ! de2363 [at] columbia [dot] edu
+    !
+    !
+
+    subroutine p1e(npos,nvar,ndof,delx, &
+        &          fdat,bclo,bchi,edge, &
+        &          dfdx,opts,dmin)
+
+    !
+    ! NPOS  no. edges over grid.
+    ! NVAR  no. state variables.
+    ! NDOF  no. degrees-of-freedom per grid-cell.
+    ! DELX  grid-cell spacing array. LENGTH(DELX) == +1 if 
+    !       spacing is uniform .
+    ! FDAT  grid-cell moments array. FDAT is an array with
+    !       SIZE = NDOF-by-NVAR-by-NPOS-1 .
+    ! BCLO  boundary condition at lower endpoint.
+    ! BCHI  boundary condition at upper endpoint.
+    ! EDGE  edge-centred interp. for function-value. EDGE
+    !       is an array with SIZE = NVAR-by-NPOS .
+    ! DFDX  edge-centred interp. for 1st-derivative. DFDX
+    !       is an array with SIZE = NVAR-by-NPOS .
+    ! OPTS  method parameters. See RCON-OPTS for details .
+    ! DMIN  min. grid-cell spacing thresh . 
+    !
 
         implicit none
 
@@ -30,13 +65,16 @@
         integer, intent( in) :: npos,nvar,ndof
         real*8 , intent( in) :: delx(:)
         real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: edge(:,:,:)
-        real*8 , intent(out) :: dfdx(:,:,:)
+        type (rcon_ends), intent(in) :: bclo(:)
+        type (rcon_ends), intent(in) :: bchi(:)
+        real*8 , intent(out) :: edge(:,:)
+        real*8 , intent(out) :: dfdx(:,:)
+        real*8 , intent( in) :: dmin
+        class(rcon_opts), intent(in) :: opts
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar, &
-        &          head,tail
-        real*8  :: fnxx,dfxx,dd10
+        integer :: ipos,ivar,head,tail
+        real*8  :: dd10
         real*8  :: delh(-1:+0)
 
         head = +2; tail = npos-1
@@ -45,99 +83,108 @@
         if (npos.eq.2) then
     !----- default to reduced order if insufficient points !
         do  ivar = 1,nvar
-            edge(1,1,ivar) = fdat(1,1,ivar)
-            edge(2,1,ivar) = fdat(1,1,ivar)
-            edge(1,2,ivar) = fdat(1,1,ivar)
-            edge(2,2,ivar) = fdat(1,1,ivar)
-
-            dfdx(1,1,ivar) = 0.d0
-            dfdx(2,1,ivar) = 0.d0
-            dfdx(1,2,ivar) = 0.d0
-            dfdx(2,2,ivar) = 0.d0
+        
+            edge(ivar,1) = fdat(1,ivar,1)
+            dfdx(ivar,1) = 0.d0
+            
+            edge(ivar,2) = fdat(1,ivar,1)
+            dfdx(ivar,2) = 0.d0
+            
         end do
         end if
+
         if (npos.le.2) return
    
     ! Reconstruct edge-centred 2nd-order polynomials. Com- !
     ! pute values/slopes at edges directly. Full-order ex- !
-    ! trapolation at endpoints.                            !
-
-        do  ipos = head , tail
-
-            if (size(delx).gt.+1) then  ! variable spacing
-
-            delh(-1) = delx(ipos -1)
-            delh(+0) = delx(ipos +0)
-
-            dd10 = delh(-1)+delh(+0)
-
-    !------------- interpolate values/slopes at ii-th edge !
-
+    ! trapolation at endpoints.
+    
+        if (size(delx).eq.+1) then
+        
+            do  ipos = head , tail
+    
+    !--------------- reconstruction: constant grid-spacing !
+            
+            dd10 = delx(+1) * 2.d0
+            
             do  ivar = +1, nvar
 
-                fnxx = &
-        &     + delh(+0) * fdat(1,ivar,ipos-1) &
-        &     + delh(-1) * fdat(1,ivar,ipos+0)
+                edge(ivar,ipos) = &
+        &         + delx(+1) * &
+        &       fdat(1,ivar,ipos-1) &
+        &         + delx(+1) * &
+        &       fdat(1,ivar,ipos+0)
 
-                dfxx = &
-        &     - 4.0d+000 * fdat(1,ivar,ipos-1) &
-        &     + 4.0d+000 * fdat(1,ivar,ipos+0)
+                dfdx(ivar,ipos) = &
+        &         - 2.0d+0 *  &
+        &       fdat(1,ivar,ipos-1) &
+        &         + 2.0d+0 *  &
+        &       fdat(1,ivar,ipos+0)
 
-                fnxx = fnxx / dd10
-                dfxx = dfxx / dd10
-
-                edge(2,ivar,ipos-1) = fnxx
-                edge(1,ivar,ipos+0) = fnxx
-
-                dfdx(2,ivar,ipos-1) = dfxx
-                dfdx(1,ivar,ipos+0) = dfxx
-
-            end do
-
-            else
-
-    !------------- interpolate values/slopes at ii-th edge !
-
-            do  ivar = +1, nvar
-
-                fnxx = &
-        &     + delx(+1) * fdat(1,ivar,ipos-1) &
-        &     + delx(+1) * fdat(1,ivar,ipos+0)
-
-                dfxx = &
-        &     - 4.0d+000 * fdat(1,ivar,ipos-1) &
-        &     + 4.0d+000 * fdat(1,ivar,ipos+0)
-
-                fnxx = fnxx / delx(1)
-                dfxx = dfxx / delx(1)
-
-                edge(2,ivar,ipos-1) = fnxx
-                edge(1,ivar,ipos+0) = fnxx
-
-                dfdx(2,ivar,ipos-1) = dfxx
-                dfdx(1,ivar,ipos+0) = dfxx
+                edge(ivar,ipos) = &
+        &       edge(ivar,ipos) / dd10
+                dfdx(ivar,ipos) = &
+        &       dfdx(ivar,ipos) / dd10
 
             end do
             
-            end if
+            end do
+            
+        else
+        
+            do  ipos = head , tail
+    
+    !--------------- reconstruction: variable grid-spacing !
+            
+            delh(-1) = &
+        &       max(delx(ipos-1),dmin)
+            delh(+0) = &
+        &       max(delx(ipos+0),dmin)
 
-        end do
+            dd10 = delh(-1)+delh(+0)
+            
+            do  ivar = +1, nvar
 
-    !- impose low-order value/slope B.C.'s about endpoints !
+                edge(ivar,ipos) = &
+        &         + delh(+0) * &
+        &       fdat(1,ivar,ipos-1) &
+        &         + delh(-1) * &
+        &       fdat(1,ivar,ipos+0)
+
+                dfdx(ivar,ipos) = &
+        &         - 2.0d+0 *  &
+        &       fdat(1,ivar,ipos-1) &
+        &         + 2.0d+0 *  &
+        &       fdat(1,ivar,ipos+0)
+
+                edge(ivar,ipos) = &
+        &       edge(ivar,ipos) / dd10
+                dfdx(ivar,ipos) = &
+        &       dfdx(ivar,ipos) / dd10
+
+            end do
+            
+            end do  
+            
+        end if
+    
+    !------------- 1st-order value/slope BC's at endpoints !
 
         do  ivar = +1, nvar
 
-            edge(1,ivar,head-1) = fdat(1,ivar,head-1)
-            dfdx(1,ivar,head-1) = 0.d0
-
-            edge(2,ivar,tail+0) = fdat(1,ivar,tail+0)
-            dfdx(2,ivar,tail+0) = 0.d0
+            edge(ivar,head-1) = &
+        &       fdat(+1,ivar,head-1)           
+            edge(ivar,tail+1) = &
+        &       fdat(+1,ivar,tail+0)
+        
+            dfdx(ivar,head-1) = 0.d0
+            dfdx(ivar,tail+1) = 0.d0
 
         end do
-        
+    
         return
-
-    end subroutine p1e
-
-
-
+        
+    end subroutine
+    
+    
+    
