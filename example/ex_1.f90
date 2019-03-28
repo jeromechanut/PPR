@@ -7,7 +7,7 @@
 !   methods should be exact here!
 !
 
-#   include "../PPR/ppr_1d.f90"
+#   include "../src/ppr_1d.f90"
 
     program ex
 
