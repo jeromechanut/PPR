@@ -7,13 +7,15 @@
  <img src="../master/img/shear-3.png">
 </p>
 
-The `PPR` package is a `Fortran-90` library designed to compute high-order piecewise polynomial reconstructions and conservative integral re-mappings on structured grids. These operators can be used to build high-order finite-volume / arbitrary lagrangian-eulerian (ALE) schemes for the solution of hyperbolic transport problems.
+The `PPR` package is a `Fortran-90` library designed to compute high-order piecewise polynomial reconstructions and conservative integral re-mappings on structured grids. These operators can be used to build high-order finite-volume / arbitrary lagrangian-eulerian `ALE` schemes for the solution of hyperbolic transport problems.
 
-Various conservative polynomial reconstructions are supported, including piecewise constant (`PCM`), linear (`PLM`), parabolic (`PPM`) and quartic (`PQM`) types. Each interpolant can be combined with a selection of slope-limiters, including exact monotonicity-preserving and weighted essential non-oscillatory (`WENO`)-like formulations. Support is provided for both uniform and non-uniform structured grid types.
+Various conservative polynomial reconstructions are supported, including piecewise constant `PCM`, linear `PLM`, parabolic `PPM` and quartic `PQM` types. Each interpolant can be combined with a selection of slope-limiters, including exact monotonicity-preserving and weighted essential non-oscillatory `WENO`-like formulations. Support is provided for both uniform and non-uniform structured grid types.
 
 ## `Getting Started`
 
-The `PPR` package is encapsulated in a single module: `ppr_1d`, that defines interfaces to the main reconstruction and re-mapping routines `rcon1d` and `rmap1d`. To call `PPR`, simply `#include ../src/ppr_1d.f90` and compile with the `-cpp` flag. See the example programs for additional detail.
+The `PPR` package is encapsulated in a single module: `ppr_1d` --- defining interfaces to the main reconstruction and re-mapping routines `rcon1d` and `rmap1d`. To call `PPR`, simply `#include ../src/ppr_1d.f90` and compile with the `-cpp` flag. 
+
+See the example programs for additional detail.
 
 ## `Example cases`
 
