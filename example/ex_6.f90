@@ -6,8 +6,8 @@
 !   computed in a flux-form semi-lagrangian sense -- 
 !   integrating over the upwind regions "swept" by edges
 !   in each time-step. This implementation requires CFL<1,
-!   within upwind regions covering adjacent cells only. A
-!   CFL>=1 variant could be constructed using RMAP1D().
+!   with the upwind regions covering adjacent cells only. 
+!   A CFL>=1 variant could be constructed using RMAP1D().
 !
 
 #   include "../src/ppr_1d.f90"
