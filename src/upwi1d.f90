@@ -32,7 +32,7 @@
     ! UPWI1D.f90: upwind-biased flux-reconstruction scheme.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
+    ! 28-Mar-2019
     ! de2363 [at] columbia [dot] edu
     !
     !
@@ -53,7 +53,7 @@
     !       NPOS-by-1 .
     ! QBAR  cell-centred integral moments. QBAR has SIZE =
     !       NDOF-by-NVAR-by-NPOS-1 .
-    ! QEDG  edge-centred upwind-type eval. QEDG has SIZE = 
+    ! QEDG  edge-centred upwind flux eval. QEDG has SIZE = 
     !       NVAR-by-NPOS .
     ! BCLO  boundary condition at lower endpoint .
     ! BCHI  boundary condition at upper endpoint . 
@@ -226,7 +226,7 @@
     !       NPOS-by-1 .
     ! QHAT  cell-centred polynomial recon. QHAT has SIZE =  
     !       NDOF-by-NVAR-by-NPOS-1 .
-    ! QEDG  edge-centred upwind-type eval. QEDG has SIZE = 
+    ! QEDG  edge-centred upwind flux eval. QEDG has SIZE = 
     !       NVAR-by-NPOS .
     !
 
@@ -242,96 +242,75 @@
   
     !------------------------------------------- variables !      
         integer :: ipos,ivar
-        real*8  :: uCFL,SS11,SS22,QQ11,QQ22
-        real*8  :: Qdel,Sdel,Qval,Smag
-        real*8  :: BV11(1:1),BV22(1:1)
-        
-        real*8 , parameter :: ZERO = 1.d-14
+        real*8  :: uCFL,xhat,ss11,ss22,flux
+        real*8  :: ivec(1:1)
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
         do  ipos = +2 , npos - 1
         
-            if (size(SPAC).ne.+1) then          
+            if (uvel(ipos) .gt. +0.0d0) then
+            
+    !----------- integrate profile over upwind cell IPOS-1 !
+ 
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-1)          
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(ipos-1)
             else
+            xhat = .5d0 * SPAC(    +1)
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(    +1)
             end if
-        
-            if (uCFL .gt. +0.0d0) then
-            
-    !----------- integrate profile over upwind cell IPOS-1 !
-  
-            SS11 = +1.d0 - 2.d0 * uCFL
-            SS22 = +1.d0
+ 
+            ss11 = +1.d0 - 2.d0 * uCFL
+            ss22 = +1.d0
 
-            BV11(1) = SS11 ** 1 / 1.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
             do  ivar = 1, nvar
-            
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:1,ivar,ipos-1))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:1,ivar,ipos-1))
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
-            
             end do
                       
             else &
-        &   if (uCFL .lt. -0.0d0) then
+        &   if (uvel(ipos) .lt. -0.0d0) then
             
     !----------- integrate profile over upwind cell IPOS+0 !
             
-            SS11 = -1.d0 - 2.d0 * uCFL
-            SS22 = -1.d0
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-0)          
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(ipos-0)
+            else
+            xhat = .5d0 * SPAC(    +1)
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(    +1)
+            end if
+
+            ss11 = -1.d0 - 2.d0 * uCFL
+            ss22 = -1.d0
         
-            BV11(1) = SS11 ** 1 / 1.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
             do  ivar = 1, nvar
-                
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:1,ivar,ipos-0))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:1,ivar,ipos-0))
-                
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
             end do
             
@@ -340,7 +319,7 @@
         end do
                
         return
-    
+
     end  subroutine
 
     ! P1U: upwind-type flux reconstruction, degree-1 impl. !
@@ -357,7 +336,7 @@
     !       NPOS-by-1 .
     ! QHAT  cell-centred polynomial recon. QHAT has SIZE =  
     !       NDOF-by-NVAR-by-NPOS-1 .
-    ! QEDG  edge-centred upwind-type eval. QEDG has SIZE = 
+    ! QEDG  edge-centred upwind flux eval. QEDG has SIZE = 
     !       NVAR-by-NPOS .
     !
 
@@ -373,100 +352,81 @@
   
     !------------------------------------------- variables !      
         integer :: ipos,ivar
-        real*8  :: uCFL,SS11,SS22,QQ11,QQ22
-        real*8  :: Qdel,Sdel,Qval,Smag
-        real*8  :: BV11(1:2),BV22(1:2)
-        
-        real*8 , parameter :: ZERO = 1.d-14
+        real*8  :: uCFL,xhat,ss11,ss22,flux
+        real*8  :: ivec(1:2)
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
         do  ipos = +2 , npos - 1
         
-            if (size(SPAC).ne.+1) then          
+            if (uvel(ipos) .gt. +0.0d0) then
+            
+    !----------- integrate profile over upwind cell IPOS-1 !
+ 
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-1)          
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(ipos-1)
             else
+            xhat = .5d0 * SPAC(    +1)
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(    +1)
             end if
-        
-            if (uCFL .gt. +0.0d0) then
-            
-    !----------- integrate profile over upwind cell IPOS-1 !
-  
-            SS11 = +1.d0 - 2.d0 * uCFL
-            SS22 = +1.d0
+ 
+            ss11 = +1.d0 - 2.d0 * uCFL
+            ss22 = +1.d0
 
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            
-            do  ivar = 1, nvar
-            
-                QQ11 = dot_product( &
-        &           BV11, &
-        &       QHAT(1:2,ivar,ipos-1))
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
         
-                QQ22 = dot_product( &
-        &           BV22, &
+            do  ivar = 1, nvar
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:2,ivar,ipos-1))
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
-            
             end do
                       
             else &
-        &   if (uCFL .lt. -0.0d0) then
+        &   if (uvel(ipos) .lt. -0.0d0) then
             
     !----------- integrate profile over upwind cell IPOS+0 !
             
-            SS11 = -1.d0 - 2.d0 * uCFL
-            SS22 = -1.d0
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-0)          
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(ipos-0)
+            else
+            xhat = .5d0 * SPAC(    +1)
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(    +1)
+            end if
+
+            ss11 = -1.d0 - 2.d0 * uCFL
+            ss22 = -1.d0
         
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
+        
             do  ivar = 1, nvar
-                
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:2,ivar,ipos-0))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:2,ivar,ipos-0))
-                
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
             end do
             
@@ -492,7 +452,7 @@
     !       NPOS-by-1 .
     ! QHAT  cell-centred polynomial recon. QHAT has SIZE =  
     !       NDOF-by-NVAR-by-NPOS-1 .
-    ! QEDG  edge-centred upwind-type eval. QEDG has SIZE = 
+    ! QEDG  edge-centred upwind flux eval. QEDG has SIZE = 
     !       NVAR-by-NPOS .
     !
 
@@ -508,104 +468,87 @@
   
     !------------------------------------------- variables !      
         integer :: ipos,ivar
-        real*8  :: uCFL,SS11,SS22,QQ11,QQ22
-        real*8  :: Qdel,Sdel,Qval,Smag
-        real*8  :: BV11(1:3),BV22(1:3)
-        
-        real*8 , parameter :: ZERO = 1.d-14
+        real*8  :: uCFL,xhat,ss11,ss22,flux
+        real*8  :: ivec(1:3)
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
         do  ipos = +2 , npos - 1
         
-            if (size(SPAC).ne.+1) then          
+            if (uvel(ipos) .gt. +0.0d0) then
+            
+    !----------- integrate profile over upwind cell IPOS-1 !
+ 
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-1)          
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(ipos-1)
             else
+            xhat = .5d0 * SPAC(    +1)
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(    +1)
             end if
-        
-            if (uCFL .gt. +0.0d0) then
-            
-    !----------- integrate profile over upwind cell IPOS-1 !
-  
-            SS11 = +1.d0 - 2.d0 * uCFL
-            SS22 = +1.d0
+ 
+            ss11 = +1.d0 - 2.d0 * uCFL
+            ss22 = +1.d0
 
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            BV11(3) = SS11 ** 3 / 3.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            BV22(3) = SS22 ** 3 / 3.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
+
+            ivec(3) = ss22 ** 3 / 3.d0 &
+        &           - ss11 ** 3 / 3.d0
+
             do  ivar = 1, nvar
-            
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:3,ivar,ipos-1))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:3,ivar,ipos-1))
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
-            
             end do
                       
             else &
-        &   if (uCFL .lt. -0.0d0) then
+        &   if (uvel(ipos) .lt. -0.0d0) then
             
     !----------- integrate profile over upwind cell IPOS+0 !
             
-            SS11 = -1.d0 - 2.d0 * uCFL
-            SS22 = -1.d0
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-0)          
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(ipos-0)
+            else
+            xhat = .5d0 * SPAC(    +1)
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(    +1)
+            end if
+
+            ss11 = -1.d0 - 2.d0 * uCFL
+            ss22 = -1.d0
         
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            BV11(3) = SS11 ** 3 / 3.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            BV22(3) = SS22 ** 3 / 3.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
+
+            ivec(3) = ss22 ** 3 / 3.d0 &
+        &           - ss11 ** 3 / 3.d0
+
             do  ivar = 1, nvar
-                
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:3,ivar,ipos-0))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:3,ivar,ipos-0))
-                
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
             end do
             
@@ -631,7 +574,7 @@
     !       NPOS-by-1 .
     ! QHAT  cell-centred polynomial recon. QHAT has SIZE =  
     !       NDOF-by-NVAR-by-NPOS-1 .
-    ! QEDG  edge-centred upwind-type eval. QEDG has SIZE = 
+    ! QEDG  edge-centred upwind flux eval. QEDG has SIZE = 
     !       NVAR-by-NPOS .
     !
 
@@ -647,112 +590,99 @@
   
     !------------------------------------------- variables !      
         integer :: ipos,ivar
-        real*8  :: uCFL,SS11,SS22,QQ11,QQ22
-        real*8  :: Qdel,Sdel,Qval,Smag
-        real*8  :: BV11(1:5),BV22(1:5)
-        
-        real*8 , parameter :: ZERO = 1.d-14
+        real*8  :: uCFL,xhat,ss11,ss22,flux
+        real*8  :: ivec(1:5)
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
         do  ipos = +2 , npos - 1
         
-            if (size(SPAC).ne.+1) then          
+            if (uvel(ipos) .gt. +0.0d0) then
+            
+    !----------- integrate profile over upwind cell IPOS-1 !
+ 
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-1)          
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(ipos-1)
             else
+            xhat = .5d0 * SPAC(    +1)
             uCFL = uvel(ipos) &
         &        * tDEL / SPAC(    +1)
             end if
-        
-            if (uCFL .gt. +0.0d0) then
-            
-    !----------- integrate profile over upwind cell IPOS-1 !
-  
-            SS11 = +1.d0 - 2.d0 * uCFL
-            SS22 = +1.d0
+ 
+            ss11 = +1.d0 - 2.d0 * uCFL
+            ss22 = +1.d0
 
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            BV11(3) = SS11 ** 3 / 3.d0
-            BV11(4) = SS11 ** 4 / 4.d0
-            BV11(5) = SS11 ** 5 / 5.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            BV22(3) = SS22 ** 3 / 3.d0
-            BV22(4) = SS22 ** 4 / 4.d0
-            BV22(5) = SS22 ** 5 / 5.d0
-            
-            do  ivar = 1, nvar
-            
-                QQ11 = dot_product( &
-        &           BV11, &
-        &       QHAT(1:5,ivar,ipos-1))
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
+
+            ivec(3) = ss22 ** 3 / 3.d0 &
+        &           - ss11 ** 3 / 3.d0
+
+            ivec(4) = ss22 ** 4 / 4.d0 &
+        &           - ss11 ** 4 / 4.d0
+
+            ivec(5) = ss22 ** 5 / 5.d0 &
+        &           - ss11 ** 5 / 5.d0
         
-                QQ22 = dot_product( &
-        &           BV22, &
+            do  ivar = 1, nvar
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:5,ivar,ipos-1))
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
-            
             end do
                       
             else &
-        &   if (uCFL .lt. -0.0d0) then
+        &   if (uvel(ipos) .lt. -0.0d0) then
             
     !----------- integrate profile over upwind cell IPOS+0 !
             
-            SS11 = -1.d0 - 2.d0 * uCFL
-            SS22 = -1.d0
+            if (size(SPAC).ne.+1) then
+            xhat = .5d0 * SPAC(ipos-0)          
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(ipos-0)
+            else
+            xhat = .5d0 * SPAC(    +1)
+            uCFL = uvel(ipos) &
+        &        * tDEL / SPAC(    +1)
+            end if
+
+            ss11 = -1.d0 - 2.d0 * uCFL
+            ss22 = -1.d0
         
-            BV11(1) = SS11 ** 1 / 1.d0
-            BV11(2) = SS11 ** 2 / 2.d0
-            BV11(3) = SS11 ** 3 / 3.d0
-            BV11(4) = SS11 ** 4 / 4.d0
-            BV11(5) = SS11 ** 5 / 5.d0
-            
-            BV22(1) = SS22 ** 1 / 1.d0
-            BV22(2) = SS22 ** 2 / 2.d0
-            BV22(3) = SS22 ** 3 / 3.d0
-            BV22(4) = SS22 ** 4 / 4.d0
-            BV22(5) = SS22 ** 5 / 5.d0
-            
+            ivec(1) = ss22 ** 1 / 1.d0 &
+        &           - ss11 ** 1 / 1.d0
+    
+            ivec(2) = ss22 ** 2 / 2.d0 &
+        &           - ss11 ** 2 / 2.d0
+
+            ivec(3) = ss22 ** 3 / 3.d0 &
+        &           - ss11 ** 3 / 3.d0
+
+            ivec(4) = ss22 ** 4 / 4.d0 &
+        &           - ss11 ** 4 / 4.d0
+
+            ivec(5) = ss22 ** 5 / 5.d0 &
+        &           - ss11 ** 5 / 5.d0
+        
             do  ivar = 1, nvar
-                
-                QQ11 = dot_product( &
-        &           BV11, &
+
+                flux =  dot_product (  &
+        &           ivec, & 
         &       QHAT(1:5,ivar,ipos-0))
-        
-                QQ22 = dot_product( &
-        &           BV22, &
-        &       QHAT(1:5,ivar,ipos-0))
-                
-                Sdel = SS22 - SS11
-                Smag = abs(Sdel)
-                Qdel = QQ22 - QQ11
-                
-                if (Smag.gt.ZERO) then
-                    Qval = Qdel & 
-        &                / Sdel
-                else
-                    Qval = QQ22 &
-        &                / SS22
-                end if
-                
-                qedg(ivar,ipos) = Qval
+
+                flux = flux * xhat
+
+                qedg(ivar,ipos) = flux
                 
             end do
             
