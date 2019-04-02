@@ -1,5 +1,4 @@
 
-    !-------------------------------------------------------
     !
     ! This program may be freely redistributed under the 
     ! condition that the copyright notices (including this 
@@ -25,16 +24,15 @@
     ! or certify this code in any way whatsoever.  This 
     ! code is provided "as-is" to be used at your own risk.
     !
-    !-------------------------------------------------------
     !
 
     module ppr_1d
 
     !    
-    ! PPR_1D.f90: 1-d piecewise polynomial reconstructions.
+    ! PPR-1D.f90: 1-d piecewise polynomial reconstructions.
     !
     ! Darren Engwirda 
-    ! 10-Sep-2016
+    ! 31-Mar-2019
     ! de2363 [at] columbia [dot] edu
     !
     !
@@ -287,6 +285,12 @@
 #       include "bfun1d.f90"
 
     !------------------------------------------------------!
+    ! UTIL1D : one-dimensional grid manip. utilities .     !
+    !------------------------------------------------------!
+    
+#       include "util1d.f90"
+
+    !------------------------------------------------------!
     ! WENO1D : "essentially" non-oscillatory limiter .     !
     !------------------------------------------------------!
 
@@ -321,11 +325,12 @@
 #       include "rmap1d.f90"
 
     !------------------------------------------------------!
-    ! UPWI1D : one-dimensional upwind-biased advect. .     !
+    ! FFSL1D : one-dimensional FFSL scalar transport .     !
     !------------------------------------------------------!
     
-#       include "upwi1d.f90"
-    
+#       include "ffsl1d.f90"
+
+
     !------------------------------------------ end ppr_1d !
       
 #       undef   __TIC__

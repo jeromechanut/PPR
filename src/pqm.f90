@@ -1,5 +1,4 @@
 
-    !-------------------------------------------------------
     !
     ! This program may be freely redistributed under the 
     ! condition that the copyright notices (including this 
@@ -25,11 +24,10 @@
     ! or certify this code in any way whatsoever.  This 
     ! code is provided "as-is" to be used at your own risk.
     !
-    !-------------------------------------------------------
     !
 
     !    
-    ! PQM.f90: a 1d slope-limited piecewise quartic re-con.
+    ! PQM.f90: a 1d slope-limited, piecewise quartic recon.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

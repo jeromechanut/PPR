@@ -1,5 +1,4 @@
 
-    !-------------------------------------------------------
     !
     ! This program may be freely redistributed under the 
     ! condition that the copyright notices (including this 
@@ -25,14 +24,13 @@
     ! or certify this code in any way whatsoever.  This 
     ! code is provided "as-is" to be used at your own risk.
     !
-    !-------------------------------------------------------
     !
 
     !    
     ! RMAP1D.f90: high-order integral re-mapping operators.
     !
     ! Darren Engwirda 
-    ! 07-Sep-2016
+    ! 31-Mar-2019
     ! ​de2363 [at] columbia [dot] edu
     !
     !
@@ -82,7 +80,7 @@
     !------------------------------------------- variables !
         integer :: ipos
         real*8  :: diff,spac,same,xtol
-        real*8  :: delx(1:1)
+        real*8  :: delx(1)
         logical :: uniform
         
 #       ifdef __PPR_TIMER__
@@ -154,31 +152,35 @@
         select case(opts%cell_meth)
         case(pcm_method)
     !------------------------------------ 1st-order method !
-        call p0m   (npos,nnew,nvar, &
-        &           ndof,xpos,xnew, &
+        call imap1d(npos,nnew,nvar, &
+        &           ndof,  +1,      &
+        &           xpos,xnew,      &
         &           work%cell_func, &
-        &           fnew,xtol)
+        &           fdat,fnew,xtol)
     
         case(plm_method)
     !------------------------------------ 2nd-order method !
-        call p1m   (npos,nnew,nvar, &
-        &           ndof,xpos,xnew, &
+        call imap1d(npos,nnew,nvar, &
+        &           ndof,  +2,      &
+        &           xpos,xnew,      &
         &           work%cell_func, &
-        &           fnew,xtol)
+        &           fdat,fnew,xtol)
 
         case(ppm_method)
     !------------------------------------ 3rd-order method !
-        call p2m   (npos,nnew,nvar, &
-        &           ndof,xpos,xnew, &
+        call imap1d(npos,nnew,nvar, &
+        &           ndof,  +3,      &
+        &           xpos,xnew,      &
         &           work%cell_func, &
-        &           fnew,xtol)
+        &           fdat,fnew,xtol)
 
         case(pqm_method)
     !------------------------------------ 5th-order method !
-        call p4m   (npos,nnew,nvar, &
-        &           ndof,xpos,xnew, &
+        call imap1d(npos,nnew,nvar, &
+        &           ndof,  +5,      &
+        &           xpos,xnew,      &
         &           work%cell_func, &
-        &           fnew,xtol)
+        &           fdat,fnew,xtol)
         
         end select
         
@@ -188,24 +190,27 @@
     
     end  subroutine
     
-    !------------ P0M : one-dimensional degree-0 remapping !
+    !------------ IMAP1D: 1-dimensional degree-k remapping !
     
-    pure subroutine p0m(npos,nnew,nvar,ndof, &
-        &               xpos,xnew,fhat,fnew, &
-        &               XTOL)
+    pure subroutine imap1d(npos,nnew,nvar,ndof, &
+        &                  mdof,xpos,xnew,fhat, &
+        &                  fdat,fnew,XTOL)
 
     !
     ! NPOS  no. edges in old grid.
     ! NNEW  no. edges in new grid.
     ! NVAR  no. discrete variables to remap.
     ! NDOF  no. degrees-of-freedom per cell.
+    ! MDOF  no. degrees-of-freedom per FHAT.    
     ! XPOS  old grid edge positions. XPOS is a length NPOS
     !       array .
     ! XNEW  new grid edge positions. XNEW is a length NNEW
     !       array .
     ! FHAT  reconstruction over old grid. FHAT has SIZE =
     !       MDOF-by-NVAR-by-NPOS-1 .
-    ! FNEW  reconstruction over new grid. FNEW has SIZE = 
+    ! FDAT  grid-cell moments on old grid. FDAT has SIZE = 
+    !       NDOF-by-NVAR-by-NPOS-1 .
+    ! FNEW  grid-cell moments on new grid. FNEW has SIZE = 
     !       NDOF-by-NVAR-by-NNEW-1 .
     ! XTOL  min. grid-cell thickness . 
     !
@@ -214,22 +219,34 @@
     
     !------------------------------------------- arguments !
         integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar,ndof
+        integer, intent( in) :: nvar
+        integer, intent( in) :: ndof,mdof
         real*8 , intent( in) :: xpos(:)
         real*8 , intent( in) :: xnew(:)
         real*8 , intent( in) :: fhat(:,:,:)
+        real*8 , intent( in) :: fdat(:,:,:)        
         real*8 , intent(out) :: fnew(:,:,:)
         real*8 , intent( in) :: XTOL
         
     !------------------------------------------- variables !
-        integer :: kpos,jpos,ipos
-        integer :: ivar,idof,pos0,pos1
-        real*8  :: xmid,xhat,khat
-        real*8  :: xxlo,xxhi,sslo,sshi
-        real*8  :: intf,ivec(1:1)
+        integer :: kpos,ipos,ivar,idof
+        integer :: pos0,pos1,vmin,vmax
+        real*8  :: xmid,xhat,khat,stmp
+        real*8  :: xxlo,xxhi,sslo,sshi,intf
+        real*8  :: vvlo(  +1:+5)
+        real*8  :: vvhi(  +1:+5)        
+        real*8  :: ivec(  +1:+5)
+        real*8  :: sdat(  +1:nvar)
+        real*8  :: snew(  +1:nvar)
+        real*8  :: serr(  +1:nvar)
+        integer :: kmin(  +1:nvar)
+        integer :: kmax(  +1:nvar)
         
+        integer, parameter :: INTB = -1   ! integral basis  
+
     !------------- remap FDAT from XPOS to XNEW using FHAT !
 
+        kmin = +1 ; kmax = +1
         pos0 = +1 ; pos1 = +1
 
         do  kpos = +1, nnew-1
@@ -238,20 +255,20 @@
 
             pos1 = max(pos1,1)
 
-            do  pos0 = pos1, npos-1, +1
+            do  pos0 = pos1, npos-1
+
                 if (xpos(pos0+1)&
-            &       .gt. xnew(kpos+0)) then
-                    exit
-                end if
+            &       .gt. xnew(kpos+0)) exit
+
             end do
 
     !------ final cell in XPOS overlapping with XNEW(KPOS) !
     
-            do  pos1 = pos0, npos-1, +1
+            do  pos1 = pos0, npos-1
+
                 if (xpos(pos1+0)&
-            &       .ge. xnew(kpos+1)) then
-                    exit
-                end if    
+            &       .ge. xnew(kpos+1)) exit
+    
             end do
             
             pos1 = pos1 - 1
@@ -270,7 +287,7 @@
             end do
             end do
 
-            do  ipos = pos0 , pos1 , +1
+            do  ipos = pos0, pos1
 
     !------------------------------- integration endpoints !
     
@@ -293,17 +310,20 @@
 
     !------------------------------- integral basis vector !
     
-                ivec(1) = sshi ** 1 / 1.d0 &
-            &           - sslo ** 1 / 1.d0
-        
-    !--------- integrate FHAT across the overlap XXLO:XXHI !
+                call bfun1d(INTB,mdof, &
+                            sslo,vvlo)
+                call bfun1d(INTB,mdof, &
+                            sshi,vvhi)
+                
+                ivec =  vvhi - vvlo
 
-                xhat =  xhat / khat
+    !--------- integrate FHAT across the overlap XXLO:XXHI !
     
-                do  ivar = 1 , nvar , +1
+                do  ivar = +1, nvar
     
                 intf =  dot_product (  &
-            &   ivec,fhat(1:1,ivar,ipos-0))
+            &       ivec(+1:mdof),  &
+            &   fhat(+1:mdof,ivar,ipos-0) )
 
                 intf =  intf * xhat
         
@@ -316,434 +336,143 @@
 
             end do
 
-        end do
-        
-        return
-    
-    end  subroutine
+    !------------------------------- finalise KPOS profile !
 
-    !------------ P1M : one-dimensional degree-1 remapping !
-    
-    pure subroutine p1m(npos,nnew,nvar,ndof, &
-        &               xpos,xnew,fhat,fnew, &
-        &               XTOL)
+            do  ivar = +1, nvar
 
-    !
-    ! NPOS  no. edges in old grid.
-    ! NNEW  no. edges in new grid.
-    ! NVAR  no. discrete variables to remap.
-    ! NDOF  no. degrees-of-freedom per cell.
-    ! XPOS  old grid edge positions. XPOS is a length NPOS
-    !       array .
-    ! XNEW  new grid edge positions. XNEW is a length NNEW
-    !       array .
-    ! FHAT  reconstruction over old grid. FHAT has SIZE =
-    !       MDOF-by-NVAR-by-NPOS-1 .
-    ! FNEW  reconstruction over new grid. FNEW has SIZE = 
-    !       NDOF-by-NVAR-by-NNEW-1 .
-    ! XTOL  min. grid-cell thickness . 
-    !
+                fnew(  +1,ivar,kpos) = &
+            &   fnew(  +1,ivar,kpos) / khat
 
-        implicit none    
-    
-    !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar,ndof
-        real*8 , intent( in) :: xpos(:)
-        real*8 , intent( in) :: xnew(:)
-        real*8 , intent( in) :: fhat(:,:,:)
-        real*8 , intent(out) :: fnew(:,:,:)
-        real*8 , intent( in) :: XTOL
-        
-    !------------------------------------------- variables !
-        integer :: kpos,jpos,ipos
-        integer :: ivar,idof,pos0,pos1
-        real*8  :: xmid,xhat,khat
-        real*8  :: xxlo,xxhi,sslo,sshi
-        real*8  :: intf,ivec(1:2)
-        
-    !------------- remap FDAT from XPOS to XNEW using FHAT !
+    !--------- keep track of MIN/MAX for defect correction !
 
-        pos0 = +1 ; pos1 = +1
+                vmax =    kmax(ivar)
+                vmin =    kmin(ivar)
 
-        do  kpos = +1, nnew-1
-
-    !------ first cell in XPOS overlapping with XNEW(KPOS) !
-
-            pos1 = max(pos1,1)
-
-            do  pos0 = pos1, npos-1, +1
-                if (xpos(pos0+1)&
-            &       .gt. xnew(kpos+0)) then
-                    exit
+                if(fnew(1,ivar,kpos) &
+            &  .gt.fnew(1,ivar,vmax) ) then
+                
+                kmax(ivar) =   kpos
+            
+                else &
+            &   if(fnew(1,ivar,kpos) &
+            &  .lt.fnew(1,ivar,vmin) ) then
+                
+                kmin(ivar) =   kpos
+            
                 end if
-            end do
-
-    !------ final cell in XPOS overlapping with XNEW(KPOS) !
-    
-            do  pos1 = pos0, npos-1, +1
-                if (xpos(pos1+0)&
-            &       .ge. xnew(kpos+1)) then
-                    exit
-                end if    
-            end do
-            
-            pos1 = pos1 - 1
-
-    !------------- integrate FHAT across overlapping cells !
-
-            khat = xnew(kpos+1) &
-            &    - xnew(kpos+0)
-            khat = max (khat , XTOL)
-
-            do  idof = +1,ndof
-            do  ivar = +1,nvar
-                
-                fnew(idof,ivar,kpos) = 0.d0
-            
-            end do
-            end do
-
-            do  ipos = pos0 , pos1 , +1
-
-    !------------------------------- integration endpoints !
-    
-                xxlo = max (xpos(ipos+0) , &
-            &               xnew(kpos+0))
-                xxhi = min (xpos(ipos+1) , &
-            &               xnew(kpos+1))
-
-    !------------------------------- local endpoint coords !
-    
-                xmid = xpos(ipos+1) * .5d0 &
-            &        + xpos(ipos+0) * .5d0    
-                xhat = xpos(ipos+1) * .5d0 &
-            &        - xpos(ipos+0) * .5d0
-     
-                sslo = &
-            &  (xxlo-xmid) / max(xhat,XTOL)
-                sshi = &
-            &  (xxhi-xmid) / max(xhat,XTOL)
-
-    !------------------------------- integral basis vector !
-    
-                ivec(1) = sshi ** 1 / 1.d0 &
-            &           - sslo ** 1 / 1.d0
-        
-                ivec(2) = sshi ** 2 / 2.d0 &
-            &           - sslo ** 2 / 2.d0
-                
-    !--------- integrate FHAT across the overlap XXLO:XXHI !
-
-                xhat =  xhat / khat
-    
-                do  ivar = 1 , nvar , +1
-    
-                intf =  dot_product (  &
-            &   ivec,fhat(1:2,ivar,ipos-0))
-
-                intf =  intf * xhat
-        
-    !--------- accumulate integral contributions from IPOS !
-    
-                fnew(  +1,ivar,kpos) = &
-            &   fnew(  +1,ivar,kpos) + intf
-
-                end do
 
             end do
 
         end do
+
+    !--------- defect corrections: Kahan/Babuska/Neumaier. !
+
+    !   Carefully compute column sums, leading to a defect
+    !   wrt. column-wise conservation. Use KBN approach to
+    !   account for FP roundoff.
+
+        sdat = 0.d0; serr = 0.d0
+        do  ipos = +1, npos-1
+        do  ivar = +1, nvar-0
         
-        return
-    
-    end  subroutine
+    !------------------------------- integrate old profile !
 
-    !------------ P2M : one-dimensional degree-2 remapping !
-    
-    pure subroutine p2m(npos,nnew,nvar,ndof, &
-        &               xpos,xnew,fhat,fnew, &
-        &               XTOL)
+            xhat = xpos(ipos+1) &
+        &        - xpos(ipos+0)
 
-    !
-    ! NPOS  no. edges in old grid.
-    ! NNEW  no. edges in new grid.
-    ! NVAR  no. discrete variables to remap.
-    ! NDOF  no. degrees-of-freedom per cell.
-    ! XPOS  old grid edge positions. XPOS is a length NPOS
-    !       array .
-    ! XNEW  new grid edge positions. XNEW is a length NNEW
-    !       array .
-    ! FHAT  reconstruction over old grid. FHAT has SIZE =
-    !       MDOF-by-NVAR-by-NPOS-1 .
-    ! FNEW  reconstruction over new grid. FNEW has SIZE = 
-    !       NDOF-by-NVAR-by-NNEW-1 .
-    ! XTOL  min. grid-cell thickness . 
-    !
-
-        implicit none    
-    
-    !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar,ndof
-        real*8 , intent( in) :: xpos(:)
-        real*8 , intent( in) :: xnew(:)
-        real*8 , intent( in) :: fhat(:,:,:)
-        real*8 , intent(out) :: fnew(:,:,:)
-        real*8 , intent( in) :: XTOL
-        
-    !------------------------------------------- variables !
-        integer :: kpos,jpos,ipos
-        integer :: ivar,idof,pos0,pos1
-        real*8  :: xmid,xhat,khat
-        real*8  :: xxlo,xxhi,sslo,sshi
-        real*8  :: intf,ivec(1:3)
-        
-    !------------- remap FDAT from XPOS to XNEW using FHAT !
-
-        pos0 = +1 ; pos1 = +1
-
-        do  kpos = +1, nnew-1
-
-    !------ first cell in XPOS overlapping with XNEW(KPOS) !
-
-            pos1 = max(pos1,1)
-
-            do  pos0 = pos1, npos-1, +1
-                if (xpos(pos0+1)&
-            &       .gt. xnew(kpos+0)) then
-                    exit
-                end if
-            end do
-
-    !------ final cell in XPOS overlapping with XNEW(KPOS) !
-    
-            do  pos1 = pos0, npos-1, +1
-                if (xpos(pos1+0)&
-            &       .ge. xnew(kpos+1)) then
-                    exit
-                end if    
-            end do
+            intf = xhat*fdat(1,ivar,ipos)
             
-            pos1 = pos1 - 1
+            stmp = sdat(ivar) + intf
 
-    !------------- integrate FHAT across overlapping cells !
+            if (abs(sdat(ivar)) &
+        &           .ge. abs(intf)) then
 
-            khat = xnew(kpos+1) &
-            &    - xnew(kpos+0)
-            khat = max (khat , XTOL)
+            serr(ivar) = &
+        &   serr(ivar) + ((sdat(ivar)-stmp)+intf)
 
-            do  idof = +1,ndof
-            do  ivar = +1,nvar
-                
-                fnew(idof,ivar,kpos) = 0.d0
-            
-            end do
-            end do
+            else
 
-            do  ipos = pos0 , pos1 , +1
+            serr(ivar) = &
+        &   serr(ivar) + ((intf-stmp)+sdat(ivar))
 
-    !------------------------------- integration endpoints !
-    
-                xxlo = max (xpos(ipos+0) , &
-            &               xnew(kpos+0))
-                xxhi = min (xpos(ipos+1) , &
-            &               xnew(kpos+1))
+            end if
 
-    !------------------------------- local endpoint coords !
-    
-                xmid = xpos(ipos+1) * .5d0 &
-            &        + xpos(ipos+0) * .5d0    
-                xhat = xpos(ipos+1) * .5d0 &
-            &        - xpos(ipos+0) * .5d0
-     
-                sslo = &
-            &  (xxlo-xmid) / max(xhat,XTOL)
-                sshi = &
-            &  (xxhi-xmid) / max(xhat,XTOL)
-
-    !------------------------------- integral basis vector !
-    
-                ivec(1) = sshi ** 1 / 1.d0 &
-            &           - sslo ** 1 / 1.d0
+            sdat(ivar) = stmp
         
-                ivec(2) = sshi ** 2 / 2.d0 &
-            &           - sslo ** 2 / 2.d0
-            
-                ivec(3) = sshi ** 3 / 3.d0 &
-            &           - sslo ** 3 / 3.d0
-                
-    !--------- integrate FHAT across the overlap XXLO:XXHI !
-    
-                xhat =  xhat / khat
+        end do
+        end do
 
-                do  ivar = 1 , nvar , +1
-    
-                intf =  dot_product (  &
-            &   ivec,fhat(1:3,ivar,ipos-0))
+        sdat =  sdat + serr
 
-                intf =  intf * xhat
+        snew = 0.d0; serr = 0.d0
+        do  ipos = +1, nnew-1
+        do  ivar = +1, nvar-0
         
-    !--------- accumulate integral contributions from IPOS !
+    !------------------------------- integrate new profile !
+
+            khat = xnew(ipos+1) &
+        &        - xnew(ipos+0)
+
+            intf = khat*fnew(1,ivar,ipos)
+            
+            stmp = snew(ivar) + intf
+
+            if (abs(snew(ivar)) &
+        &           .ge. abs(intf)) then
+
+            serr(ivar) = &
+        &   serr(ivar) + ((snew(ivar)-stmp)+intf)
+
+            else
+
+            serr(ivar) = &
+        &   serr(ivar) + ((intf-stmp)+snew(ivar))
+
+            end if
+
+            snew(ivar) = stmp
+        
+        end do
+        end do
+
+        snew =  snew + serr
+        serr =  sdat - snew
+
+    !--------- defect corrections: nudge away from extrema !
+
+    !   Add a correction to remapped state to impose exact
+    !   conservation. Via sign(correction), nudge min/max.
+    !   cell means, such that monotonicity is not violated 
+    !   near extrema...
     
-                fnew(  +1,ivar,kpos) = &
-            &   fnew(  +1,ivar,kpos) + intf
+        do  ivar = +1, nvar-0
 
-                end do
+            if (serr(ivar) .gt. 0.d0) then
 
-            end do
+                vmin = kmin(ivar)
+
+                fnew(1,ivar,vmin) = &
+        &       fnew(1,ivar,vmin) + &
+        &  serr(ivar)/(xnew(vmin+1)-xnew(vmin+0))
+
+            else &
+        &   if (serr(ivar) .lt. 0.d0) then
+
+                vmax = kmax(ivar)
+
+                fnew(1,ivar,vmax) = &
+        &       fnew(1,ivar,vmax) + &
+        &  serr(ivar)/(xnew(vmax+1)-xnew(vmax+0))
+
+            end if
 
         end do
-        
+       
+    !------------------------------- new profile now final !
+
         return
     
     end  subroutine
 
-    !------------ P4M : one-dimensional degree-4 remapping !
-    
-    pure subroutine p4m(npos,nnew,nvar,ndof, &
-        &               xpos,xnew,fhat,fnew, &
-        &               XTOL)
 
-    !
-    ! NPOS  no. edges in old grid.
-    ! NNEW  no. edges in new grid.
-    ! NVAR  no. discrete variables to remap.
-    ! NDOF  no. degrees-of-freedom per cell.
-    ! XPOS  old grid edge positions. XPOS is a length NPOS
-    !       array .
-    ! XNEW  new grid edge positions. XNEW is a length NNEW
-    !       array .
-    ! FHAT  reconstruction over old grid. FHAT has SIZE =
-    !       MDOF-by-NVAR-by-NPOS-1 .
-    ! FNEW  reconstruction over new grid. FNEW has SIZE = 
-    !       NDOF-by-NVAR-by-NNEW-1 .
-    ! XTOL  min. grid-cell thickness . 
-    !
 
-        implicit none    
-    
-    !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar,ndof
-        real*8 , intent( in) :: xpos(:)
-        real*8 , intent( in) :: xnew(:)
-        real*8 , intent( in) :: fhat(:,:,:)
-        real*8 , intent(out) :: fnew(:,:,:)
-        real*8 , intent( in) :: XTOL
-        
-    !------------------------------------------- variables !
-        integer :: kpos,jpos,ipos
-        integer :: ivar,idof,pos0,pos1
-        real*8  :: xmid,xhat,khat
-        real*8  :: xxlo,xxhi,sslo,sshi
-        real*8  :: intf,ivec(1:5)
-        
-    !------------- remap FDAT from XPOS to XNEW using FHAT !
-
-        pos0 = +1 ; pos1 = +1
-
-        do  kpos = +1, nnew-1
-
-    !------ first cell in XPOS overlapping with XNEW(KPOS) !
-
-            pos1 = max(pos1,1)
-
-            do  pos0 = pos1, npos-1, +1
-                if (xpos(pos0+1)&
-            &       .gt. xnew(kpos+0)) then
-                    exit
-                end if
-            end do
-
-    !------ final cell in XPOS overlapping with XNEW(KPOS) !
-    
-            do  pos1 = pos0, npos-1, +1
-                if (xpos(pos1+0)&
-            &       .ge. xnew(kpos+1)) then
-                    exit
-                end if    
-            end do
-            
-            pos1 = pos1 - 1
-
-    !------------- integrate FHAT across overlapping cells !
-
-            khat = xnew(kpos+1) &
-            &    - xnew(kpos+0)
-            khat = max (khat , XTOL)
-
-            do  idof = +1,ndof
-            do  ivar = +1,nvar
-                
-                fnew(idof,ivar,kpos) = 0.d0
-            
-            end do
-            end do
-
-            do  ipos = pos0 , pos1 , +1
-
-    !------------------------------- integration endpoints !
-    
-                xxlo = max (xpos(ipos+0) , &
-            &               xnew(kpos+0))
-                xxhi = min (xpos(ipos+1) , &
-            &               xnew(kpos+1))
-
-    !------------------------------- local endpoint coords !
-    
-                xmid = xpos(ipos+1) * .5d0 &
-            &        + xpos(ipos+0) * .5d0    
-                xhat = xpos(ipos+1) * .5d0 &
-            &        - xpos(ipos+0) * .5d0
-     
-                sslo = &
-            &  (xxlo-xmid) / max(xhat,XTOL)
-                sshi = &
-            &  (xxhi-xmid) / max(xhat,XTOL)
-
-    !------------------------------- integral basis vector !
-    
-                ivec(1) = sshi ** 1 / 1.d0 &
-            &           - sslo ** 1 / 1.d0
-        
-                ivec(2) = sshi ** 2 / 2.d0 &
-            &           - sslo ** 2 / 2.d0
-            
-                ivec(3) = sshi ** 3 / 3.d0 &
-            &           - sslo ** 3 / 3.d0
-            
-                ivec(4) = sshi ** 4 / 4.d0 &
-            &           - sslo ** 4 / 4.d0
-            
-                ivec(5) = sshi ** 5 / 5.d0 &
-            &           - sslo ** 5 / 5.d0
-                
-    !--------- integrate FHAT across the overlap XXLO:XXHI !
-    
-                xhat =  xhat / khat
-
-                do  ivar = 1 , nvar , +1
-    
-                intf =  dot_product (  &
-            &   ivec,fhat(1:5,ivar,ipos-0))
-
-                intf =  intf * xhat
-        
-    !--------- accumulate integral contributions from IPOS !
-    
-                fnew(  +1,ivar,kpos) = &
-            &   fnew(  +1,ivar,kpos) + intf
-
-                end do
-
-            end do
-
-        end do
-        
-        return
-    
-    end  subroutine
-
-    
-    

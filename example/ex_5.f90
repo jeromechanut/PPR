@@ -57,23 +57,17 @@
 
     !------------------------------ define a simple domain !
 
-        xpos(   1) = 0.0d+00
-        xpos(npos) = 1.0d+00
+        call linspace(0.d0,1.d0,npos,xpos)
         
-        xdel(1) = (xpos(npos)-xpos(1))/(npos-1)
-
-        do ipos = +2, npos-1
-
-            xpos(ipos) = (ipos-1) * xdel(1)         
-
-        end do
+        xdel(1) = (xpos(npos)&
+    &           -  xpos(   1)) / (npos- 1)
 
     !------------------------------ setup some simple data !
 
         do ipos = +1, npos-1
 
-            xmid = xpos(ipos+0)* 0.5d+00 &
-    &            + xpos(ipos+1)* 0.5d+00
+            xmid = xpos(ipos+0) * 0.5d+0 &
+    &            + xpos(ipos+1) * 0.5d+0
 
             fdat(1,1,ipos) = &
     &   .8d+0 * exp( -75.0d+0 * (xmid - 0.275d+0) ** 2 ) &
@@ -141,7 +135,6 @@
 
         end do
         end do
-
 
     end program
 

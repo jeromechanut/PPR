@@ -25,8 +25,8 @@
         integer :: ipos
 
     !------------------------------ position of cell edges !
-        real*8  :: xpos(npos), xtmp(ntmp)
-        real*8  :: xdel, xmid
+        real*8  :: xpos(npos),xtmp(ntmp)
+        real*8  :: xdel,xmid
         
     !-------------------------------- finite-volume arrays !
 
@@ -39,9 +39,9 @@
     !   batch is typically more efficient than one-by-one. 
     !   The last dim. is the no. cells (layers) in the grid.
 
-        real*8  :: fdat(ndof,nvar,npos-1)
+        real*8  :: init(ndof,nvar,npos-1)
         real*8  :: ftmp(ndof,nvar,ntmp-1)
-        real*8  :: fnew(ndof,nvar,npos-1)
+        real*8  :: fdat(ndof,nvar,npos-1)
 
     !------------------------------ method data-structures !
         type(rmap_work) :: work
@@ -51,35 +51,17 @@
 
     !------------------------------ define a simple domain !
 
-        xpos(   1) = 0.0d+00
-        xpos(npos) = 1.0d+00
-        xtmp(   1) = 0.0d+00
-        xtmp(ntmp) = 1.0d+00
-
-        xdel = (xpos(npos)-xpos(1))/(npos-1)
-
-        do ipos = +2, npos-1
-
-            xpos(ipos) = (ipos-1) * xdel         
-
-        end do
-
-        xdel = (xtmp(ntmp)-xtmp(1))/(ntmp-1)
-
-        do ipos = +2, ntmp-1
-
-            xtmp(ipos) = (ipos-1) * xdel         
-
-        end do
+        call linspace(0.d0,1.d0,npos,xpos)
+        call linspace(0.d0,1.d0,ntmp,xtmp)
 
     !------------------------------ setup some simple data !
 
         do ipos = +1, npos-1
 
-            xmid = xpos(ipos+0) * 0.5d+00 &
-    &            + xpos(ipos+1) * 0.5d+00
+            xmid = xpos(ipos+0) * 0.5d+0 &
+    &            + xpos(ipos+1) * 0.5d+0
 
-            fdat(1,1,ipos) = &
+            init(1,1,ipos) = &
     &   .8d+0 * exp( -75.0d+0 * (xmid - 0.275d+0) ** 2 ) &
     & + .9d+0 * exp(-100.0d+0 * (xmid - 0.500d+0) ** 2 ) &
     & + 1.d+0 * exp(-125.0d+0 * (xmid - 0.725d+0) ** 2 )
@@ -88,8 +70,8 @@
 
     !------------------------------ specify method options !
 
-        opts%edge_meth = p3e_method     ! 3rd-order edge interp.
-        opts%cell_meth = ppm_method     ! PPM method in cells
+        opts%edge_meth = p5e_method     ! 3rd-order edge interp.
+        opts%cell_meth = pqm_method     ! PPM method in cells
         opts%cell_lims = null_limit     ! monotone limiter
         
     !------------------------------ set BC.'s at endpoints !
@@ -101,21 +83,23 @@
 
         call work%init(npos,nvar,opts)
 
-    !------------------------------ re-map from new-to-tmp !
+    !------------------------------ re-map back-and-forth: !
 
-        fnew = fdat
+        fdat = init
 
         do ipos = +1, +1000
 
-        call rmap1d(npos,ntmp,nvar,ndof, &
-    &               xpos,xtmp,fnew,ftmp, &
-    &               bc_l,bc_r,work,opts)
+    !------------------------------ re-map from dat-to-tmp !
 
-    !------------------------------ re-map from tmp-to-new !
+        call rmap1d(npos,ntmp,nvar,ndof, &
+        &           xpos,xtmp,fdat,ftmp, &
+        &           bc_l,bc_r,work,opts)
+
+    !------------------------------ re-map from tmp-to-dat !
 
         call rmap1d(ntmp,npos,nvar,ndof, &
-    &               xtmp,xpos,ftmp,fnew, &
-    &               bc_l,bc_r,work,opts)
+        &           xtmp,xpos,ftmp,fdat, &
+        &           bc_l,bc_r,work,opts)
 
         end do
 
@@ -125,21 +109,24 @@
 
     !------------------------------ dump results to stdout !
 
-        print*,"Cell data: [INIT.] [FINAL]"
+        print*,"Cell data: [INIT] [RMAP] "
 
         do ipos = +1, npos-1
 
-            print *, fdat(1,1,ipos) &
-    &              , fnew(1,1,ipos)
+            print *, init(1,1,ipos) &
+        &          , fdat(1,1,ipos)
 
         end do
+
+        print*,"Conservation defect := " &
+        &     , sum(init) - sum(fdat)
 
     !------------------------------ calc. errors in L2 nrm !
 
         xdel = (xpos(npos)-xpos(1))/(npos-1)
 
-        print*, "Error (L2): " , &
-    &   sqrt(sum(xdel * (fdat(1,1,:) - fnew(1,1,:)) ** 2))
+        print*,"Discrete (L2) Error := ",&
+        sqrt(sum(xdel * (init(1,1,:) - fdat(1,1,:)) ** 2))
 
     end program
 

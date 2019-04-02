@@ -1,5 +1,4 @@
 
-    !-------------------------------------------------------
     !
     ! This program may be freely redistributed under the 
     ! condition that the copyright notices (including this 
@@ -25,7 +24,6 @@
     ! or certify this code in any way whatsoever.  This 
     ! code is provided "as-is" to be used at your own risk.
     !
-    !-------------------------------------------------------
     !
 
     !    
