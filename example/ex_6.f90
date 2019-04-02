@@ -18,7 +18,7 @@
 
         implicit none
 
-        integer, parameter :: halo = 3  ! halo cells at boundary
+        integer, parameter :: halo = 4  ! halo cells at boundary
         integer, parameter :: npos = 51 ! no. edge 
         integer, parameter :: nvar = 1  ! no. tracers to trnsprt
         integer, parameter :: ndof = 1  ! no. FV DoF per cell
@@ -90,7 +90,7 @@
 
         opts%edge_meth = p3e_method     ! 3rd-order edge interp.
         opts%cell_meth = ppm_method     ! PPM method in cells
-        opts%cell_lims = mono_limit     ! monotone limiter
+        opts%cell_lims = weno_limit     ! "non-oscillatory" lim.
         
     !------------------------------ set BC.'s at endpoints !
 
@@ -105,7 +105,7 @@
 
         qbar = init
 
-        do step = +1, +100
+        do step = +1, +100        ! 100 steps => full loop
 
     !------------------------------ periodicity via halo's !
 
@@ -116,7 +116,7 @@
 
     !------------------------------ form lagrangian fluxes !
 
-            call upwi1d (npos+2*halo,nvar, &
+            call ffsl1d (npos+2*halo,nvar, &
     &            ndof,xdel,tDEL,mask,uvel, &
     &            qbar,flux,bc_l,bc_r,work, &
     &            opts)
@@ -141,15 +141,18 @@
 
     !------------------------------ dump results to stdout !
 
-        print*,"Final step profile: "
+        print*,"End timestep profile : "
 
         do ipos = il+0, ir-0
 
-            print *, init(1,1,ipos) &
-    &              , qbar(1,1,ipos)
+            print *, init(1,:,ipos)  &
+    &              , qbar(1,:,ipos)
 
         end do
 
+        print*,"Conservation defect := " &
+    &         , sum(init(1,:,il:ir)) &
+    &         - sum(qbar(1,:,il:ir))
         
     end program
 

@@ -1,5 +1,4 @@
 
-    !-------------------------------------------------------
     !
     ! This program may be freely redistributed under the 
     ! condition that the copyright notices (including this 
@@ -25,11 +24,10 @@
     ! or certify this code in any way whatsoever.  This 
     ! code is provided "as-is" to be used at your own risk.
     !
-    !-------------------------------------------------------
     !
 
     !    
-    ! PPM.f90: 1d slope-limited piecewise parabolic recon.
+    ! PPM.f90: 1d slope-limited, piecewise parabolic recon.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
@@ -38,7 +36,7 @@
     !
   
     ! P. Colella and PR. Woodward, The Piecewise Parabolic 
-    ! Method (PPM) for gas-dynamical simulations, J. Comp. 
+    ! Method (PPM) for gas-dynamical simulations., J. Comp. 
     ! Phys., 54 (1), 1984, 174-201,
     ! https://doi.org/10.1016/0021-9991(84)90143-8
     !
