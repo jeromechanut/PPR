@@ -212,41 +212,41 @@
 
         if (scal .eq. +1.d0) then
 
-        cmat(1,1) = cmat(1,1) + & 
+        cmat(1,1) = cmat(1,1) &
              + ( amat(1,1) * bmat(1,1) &
                + amat(1,2) * bmat(2,1) &
                + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) + & 
+        cmat(2,1) = cmat(2,1) &
              + ( amat(2,1) * bmat(1,1) &
                + amat(2,2) * bmat(2,1) &
                + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) + & 
+        cmat(3,1) = cmat(3,1) &
              + ( amat(3,1) * bmat(1,1) &
                + amat(3,2) * bmat(2,1) &
                + amat(3,3) * bmat(3,1) )
 
-        cmat(1,2) = cmat(1,2) + & 
+        cmat(1,2) = cmat(1,2) &
              + ( amat(1,1) * bmat(1,2) &
                + amat(1,2) * bmat(2,2) &
                + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) + & 
+        cmat(2,2) = cmat(2,2) &
              + ( amat(2,1) * bmat(1,2) &
                + amat(2,2) * bmat(2,2) &
                + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) + & 
+        cmat(3,2) = cmat(3,2) &
              + ( amat(3,1) * bmat(1,2) &
                + amat(3,2) * bmat(2,2) &
                + amat(3,3) * bmat(3,2) )
 
-        cmat(1,3) = cmat(1,3) + & 
+        cmat(1,3) = cmat(1,3) &
              + ( amat(1,1) * bmat(1,3) &
                + amat(1,2) * bmat(2,3) &
                + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) + & 
+        cmat(2,3) = cmat(2,3) &
              + ( amat(2,1) * bmat(1,3) &
                + amat(2,2) * bmat(2,3) &
                + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) + & 
+        cmat(3,3) = cmat(3,3) &
              + ( amat(3,1) * bmat(1,3) &
                + amat(3,2) * bmat(2,3) &
                + amat(3,3) * bmat(3,3) )
@@ -254,41 +254,41 @@
         else &
         if (scal .eq. -1.d0) then
 
-        cmat(1,1) = cmat(1,1) + & 
+        cmat(1,1) = cmat(1,1) &
              - ( amat(1,1) * bmat(1,1) &
                + amat(1,2) * bmat(2,1) &
                + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) + & 
+        cmat(2,1) = cmat(2,1) &
              - ( amat(2,1) * bmat(1,1) &
                + amat(2,2) * bmat(2,1) &
                + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) + & 
+        cmat(3,1) = cmat(3,1) &
              - ( amat(3,1) * bmat(1,1) &
                + amat(3,2) * bmat(2,1) &
                + amat(3,3) * bmat(3,1) )
 
-        cmat(1,2) = cmat(1,2) + & 
+        cmat(1,2) = cmat(1,2) &
              - ( amat(1,1) * bmat(1,2) &
                + amat(1,2) * bmat(2,2) &
                + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) + & 
+        cmat(2,2) = cmat(2,2) &
              - ( amat(2,1) * bmat(1,2) &
                + amat(2,2) * bmat(2,2) &
                + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) + & 
+        cmat(3,2) = cmat(3,2) &
              - ( amat(3,1) * bmat(1,2) &
                + amat(3,2) * bmat(2,2) &
                + amat(3,3) * bmat(3,2) )
 
-        cmat(1,3) = cmat(1,3) + & 
+        cmat(1,3) = cmat(1,3) &
              - ( amat(1,1) * bmat(1,3) &
                + amat(1,2) * bmat(2,3) &
                + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) + & 
+        cmat(2,3) = cmat(2,3) &
              - ( amat(2,1) * bmat(1,3) &
                + amat(2,2) * bmat(2,3) &
                + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) + & 
+        cmat(3,3) = cmat(3,3) &
              - ( amat(3,1) * bmat(1,3) &
                + amat(3,2) * bmat(2,3) &
                + amat(3,3) * bmat(3,3) )
