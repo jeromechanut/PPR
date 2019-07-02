@@ -41,10 +41,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: adim
-        real*8 , intent(out) :: ainv(vdim,*)
+        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: vdim
+        real*8 , intent(out) :: ainv(vdim,*)
         real*8 , intent(out) :: adet
         
     !------------------------------------------- form A^-1 !
@@ -67,10 +67,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: adim
-        real*8 , intent(out) :: ainv(vdim,*)
+        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: vdim
+        real*8 , intent(out) :: ainv(vdim,*)
         real*8 , intent(out) :: adet
         
     !------------------------------------------- variables !
@@ -129,13 +129,13 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(in)    :: bmat(bdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: bdim
+        real*8 , intent(in)    :: bmat(bdim,*)
         real*8 , intent(in)    :: scal
-        real*8 , intent(inout) :: cmat(cdim,*)
         integer, intent(in)    :: cdim
+        real*8 , intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
 
@@ -200,13 +200,13 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(in)    :: bmat(bdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: bdim
+        real*8 , intent(in)    :: bmat(bdim,*)
         real*8 , intent(in)    :: scal
-        real*8 , intent(inout) :: cmat(cdim,*)
         integer, intent(in)    :: cdim
+        real*8 , intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
 
@@ -346,10 +346,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -402,10 +402,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -468,10 +468,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -609,10 +609,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
