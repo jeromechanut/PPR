@@ -41,10 +41,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: adim
-        real*8 , intent(out) :: ainv(vdim,*)
+        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: vdim
+        real*8 , intent(out) :: ainv(vdim,*)
         real*8 , intent(out) :: adet
         
     !------------------------------------------- form A^-1 !
@@ -67,10 +67,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: adim
-        real*8 , intent(out) :: ainv(vdim,*)
+        real*8 , intent( in) :: amat(adim,*)
         integer, intent( in) :: vdim
+        real*8 , intent(out) :: ainv(vdim,*)
         real*8 , intent(out) :: adet
         
     !------------------------------------------- variables !
@@ -129,13 +129,13 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(in)    :: bmat(bdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: bdim
+        real*8 , intent(in)    :: bmat(bdim,*)
         real*8 , intent(in)    :: scal
-        real*8 , intent(inout) :: cmat(cdim,*)
         integer, intent(in)    :: cdim
+        real*8 , intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
 
@@ -200,53 +200,53 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(in)    :: bmat(bdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: bdim
+        real*8 , intent(in)    :: bmat(bdim,*)
         real*8 , intent(in)    :: scal
-        real*8 , intent(inout) :: cmat(cdim,*)
         integer, intent(in)    :: cdim
+        real*8 , intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
 
         if (scal .eq. +1.d0) then
 
-        cmat(1,1) = cmat(1,1) + & 
+        cmat(1,1) = cmat(1,1) &
              + ( amat(1,1) * bmat(1,1) &
                + amat(1,2) * bmat(2,1) &
                + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) + & 
+        cmat(2,1) = cmat(2,1) &
              + ( amat(2,1) * bmat(1,1) &
                + amat(2,2) * bmat(2,1) &
                + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) + & 
+        cmat(3,1) = cmat(3,1) &
              + ( amat(3,1) * bmat(1,1) &
                + amat(3,2) * bmat(2,1) &
                + amat(3,3) * bmat(3,1) )
 
-        cmat(1,2) = cmat(1,2) + & 
+        cmat(1,2) = cmat(1,2) &
              + ( amat(1,1) * bmat(1,2) &
                + amat(1,2) * bmat(2,2) &
                + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) + & 
+        cmat(2,2) = cmat(2,2) &
              + ( amat(2,1) * bmat(1,2) &
                + amat(2,2) * bmat(2,2) &
                + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) + & 
+        cmat(3,2) = cmat(3,2) &
              + ( amat(3,1) * bmat(1,2) &
                + amat(3,2) * bmat(2,2) &
                + amat(3,3) * bmat(3,2) )
 
-        cmat(1,3) = cmat(1,3) + & 
+        cmat(1,3) = cmat(1,3) &
              + ( amat(1,1) * bmat(1,3) &
                + amat(1,2) * bmat(2,3) &
                + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) + & 
+        cmat(2,3) = cmat(2,3) &
              + ( amat(2,1) * bmat(1,3) &
                + amat(2,2) * bmat(2,3) &
                + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) + & 
+        cmat(3,3) = cmat(3,3) &
              + ( amat(3,1) * bmat(1,3) &
                + amat(3,2) * bmat(2,3) &
                + amat(3,3) * bmat(3,3) )
@@ -254,41 +254,41 @@
         else &
         if (scal .eq. -1.d0) then
 
-        cmat(1,1) = cmat(1,1) + & 
+        cmat(1,1) = cmat(1,1) &
              - ( amat(1,1) * bmat(1,1) &
                + amat(1,2) * bmat(2,1) &
                + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) + & 
+        cmat(2,1) = cmat(2,1) &
              - ( amat(2,1) * bmat(1,1) &
                + amat(2,2) * bmat(2,1) &
                + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) + & 
+        cmat(3,1) = cmat(3,1) &
              - ( amat(3,1) * bmat(1,1) &
                + amat(3,2) * bmat(2,1) &
                + amat(3,3) * bmat(3,1) )
 
-        cmat(1,2) = cmat(1,2) + & 
+        cmat(1,2) = cmat(1,2) &
              - ( amat(1,1) * bmat(1,2) &
                + amat(1,2) * bmat(2,2) &
                + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) + & 
+        cmat(2,2) = cmat(2,2) &
              - ( amat(2,1) * bmat(1,2) &
                + amat(2,2) * bmat(2,2) &
                + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) + & 
+        cmat(3,2) = cmat(3,2) &
              - ( amat(3,1) * bmat(1,2) &
                + amat(3,2) * bmat(2,2) &
                + amat(3,3) * bmat(3,2) )
 
-        cmat(1,3) = cmat(1,3) + & 
+        cmat(1,3) = cmat(1,3) &
              - ( amat(1,1) * bmat(1,3) &
                + amat(1,2) * bmat(2,3) &
                + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) + & 
+        cmat(2,3) = cmat(2,3) &
              - ( amat(2,1) * bmat(1,3) &
                + amat(2,2) * bmat(2,3) &
                + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) + & 
+        cmat(3,3) = cmat(3,3) &
              - ( amat(3,1) * bmat(1,3) &
                + amat(3,2) * bmat(2,3) &
                + amat(3,3) * bmat(3,3) )
@@ -346,10 +346,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -402,10 +402,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -468,10 +468,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
@@ -609,10 +609,10 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: adim
-        real*8 , intent(inout) :: vrhs(vdim,*)
+        real*8 , intent(in)    :: amat(adim,*)
         integer, intent(in)    :: vdim
+        real*8 , intent(inout) :: vrhs(vdim,*)
         integer, intent(in)    :: nrhs
         real*8 , intent(in)    :: fEPS
         logical, intent(inout) :: okay
