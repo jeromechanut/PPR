@@ -27,7 +27,7 @@
     !
 
     !    
-    ! ROOT1D.f90: find the "roots" of degree-k polynomials.
+    ! ROOT1D.h90: find the "roots" of degree-k polynomials.
     !
     ! Darren Engwirda 
     ! 25-Mar-2019

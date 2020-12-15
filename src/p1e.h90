@@ -27,7 +27,7 @@
     !
 
     !    
-    ! P1E.f90: set edge estimates via degree-1 polynomials.
+    ! P1E.h90: set edge estimates via degree-1 polynomials.
     !
     ! Darren Engwirda 
     ! 09-Sep-2016

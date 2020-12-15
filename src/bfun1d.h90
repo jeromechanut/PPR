@@ -27,7 +27,7 @@
     !
 
     !    
-    ! BFUN1D.f90: poly. basis-functions for reconstruction.
+    ! BFUN1D.h90: poly. basis-functions for reconstruction.
     !
     ! Darren Engwirda 
     ! 07-Sep-2016

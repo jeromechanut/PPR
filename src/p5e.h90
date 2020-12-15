@@ -27,7 +27,7 @@
     !
 
     !    
-    ! P5E.f90: set edge estimates via degree-5 polynomials.
+    ! P5E.h90: set edge estimates via degree-5 polynomials.
     !
     ! Darren Engwirda 
     ! 25-Mar-2019

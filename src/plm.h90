@@ -27,7 +27,7 @@
     !
 
     !    
-    ! PLM.f90: a 1d, slope-limited piecewise linear method.
+    ! PLM.h90: a 1d, slope-limited piecewise linear method.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

@@ -27,7 +27,7 @@
     !
 
     !    
-    ! INV.f90: block-wise solution of small linear systems.
+    ! INV.h90: block-wise solution of small linear systems.
     !
     ! Darren Engwirda 
     ! 25-Mar-2019

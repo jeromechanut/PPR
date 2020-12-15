@@ -27,7 +27,7 @@
     !
 
     !    
-    ! RMAP1D.f90: high-order integral re-mapping operators.
+    ! RMAP1D.h90: high-order integral re-mapping operators.
     !
     ! Darren Engwirda 
     ! 31-Mar-2019

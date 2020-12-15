@@ -27,7 +27,7 @@
     !
 
     !    
-    ! OSCL1D.f90: "oscillation-indicators" for WENO interp.
+    ! OSCL1D.h90: "oscillation-indicators" for WENO interp.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

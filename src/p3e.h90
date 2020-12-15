@@ -27,7 +27,7 @@
     !
 
     !    
-    ! P3E.f90: set edge estimates via degree-3 polynomials.
+    ! P3E.h90: set edge estimates via degree-3 polynomials.
     !
     ! Darren Engwirda 
     ! 09-Sep-2016

@@ -27,7 +27,7 @@
     !
 
     !    
-    ! UTIL1D.f90: util. func. for 1-dim. grid manipulation.
+    ! UTIL1D.h90: util. func. for 1-dim. grid manipulation.
     !
     ! Darren Engwirda 
     ! 31-Mar-2019

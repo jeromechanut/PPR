@@ -27,7 +27,7 @@
     !
 
     !    
-    ! FFSL1D.f90: upwind-biased flux-reconstruction scheme.
+    ! FFSL1D.h90: upwind-biased flux-reconstruction scheme.
     !
     ! Darren Engwirda 
     ! 31-Mar-2019

@@ -27,7 +27,7 @@
     !
 
     !    
-    ! WENO1D.f90: WENO-style slope-limiting for 1d reconst.
+    ! WENO1D.h90: WENO-style slope-limiting for 1d reconst.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

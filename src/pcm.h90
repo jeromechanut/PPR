@@ -27,7 +27,7 @@
     !
 
     !    
-    ! PCM.f90: 1d piecewise constant reconstruction .
+    ! PCM.h90: 1d piecewise constant reconstruction .
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

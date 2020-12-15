@@ -27,7 +27,7 @@
     !
 
     !    
-    ! PQM.f90: a 1d slope-limited, piecewise quartic recon.
+    ! PQM.h90: a 1d slope-limited, piecewise quartic recon.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

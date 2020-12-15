@@ -27,7 +27,7 @@
     !
 
     !    
-    ! PBC.f90: setup polynomial B.C.'s at domain endpoints.
+    ! PBC.h90: setup polynomial B.C.'s at domain endpoints.
     !
     ! Darren Engwirda 
     ! 09-Sep-2016

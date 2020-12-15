@@ -27,7 +27,7 @@
     !
 
     !    
-    ! PPM.f90: 1d slope-limited, piecewise parabolic recon.
+    ! PPM.h90: 1d slope-limited, piecewise parabolic recon.
     !
     ! Darren Engwirda 
     ! 08-Sep-2016

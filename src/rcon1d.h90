@@ -27,7 +27,7 @@
     !
 
     !    
-    ! RCON1D.f90: conservative, polynomial reconstructions.
+    ! RCON1D.h90: conservative, polynomial reconstructions.
     !
     ! Darren Engwirda 
     ! 07-Sep-2016
