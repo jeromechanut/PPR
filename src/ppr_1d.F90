@@ -29,7 +29,7 @@
     module ppr_1d
 
     !    
-    ! PPR-1D.f90: 1-d piecewise polynomial reconstructions.
+    ! PPR-1D.F90: 1-d piecewise polynomial reconstructions.
     !
     ! Darren Engwirda 
     ! 31-Mar-2019
@@ -282,53 +282,53 @@
     ! BFUN1D : one-dimensional poly. basis-functions .     !
     !------------------------------------------------------!
         
-#       include "bfun1d.f90"
+#       include "bfun1d.h90"
 
     !------------------------------------------------------!
     ! UTIL1D : one-dimensional grid manip. utilities .     !
     !------------------------------------------------------!
     
-#       include "util1d.f90"
+#       include "util1d.h90"
 
     !------------------------------------------------------!
     ! WENO1D : "essentially" non-oscillatory limiter .     !
     !------------------------------------------------------!
 
-#       include "weno1d.f90"
+#       include "weno1d.h90"
 
-#       include "oscl1d.f90"
+#       include "oscl1d.h90"
 
     !------------------------------------------------------!
     ! RCON1D : one-dimensional poly. reconstructions .     !
     !------------------------------------------------------!
 
-#       include "rcon1d.f90"
+#       include "rcon1d.h90"
 
-#       include "inv.f90"
+#       include "inv.h90"
 
-#       include "pbc.f90"
-#       include "p1e.f90"
-#       include "p3e.f90"
-#       include "p5e.f90"
+#       include "pbc.h90"
+#       include "p1e.h90"
+#       include "p3e.h90"
+#       include "p5e.h90"
 
-#       include "root1d.f90"
+#       include "root1d.h90"
     
-#       include "pcm.f90"
-#       include "plm.f90"
-#       include "ppm.f90"
-#       include "pqm.f90"
+#       include "pcm.h90"
+#       include "plm.h90"
+#       include "ppm.h90"
+#       include "pqm.h90"
     
     !------------------------------------------------------!
     ! RMAP1D : one-dimensional conservative "re-map" .     !
     !------------------------------------------------------!
        
-#       include "rmap1d.f90"
+#       include "rmap1d.h90"
 
     !------------------------------------------------------!
     ! FFSL1D : one-dimensional FFSL scalar transport .     !
     !------------------------------------------------------!
     
-#       include "ffsl1d.f90"
+#       include "ffsl1d.h90"
 
 
     !------------------------------------------ end ppr_1d !
