@@ -244,6 +244,11 @@
         
         integer, parameter :: INTB = -1   ! integral basis  
 
+    !------------------------------------- initializations !
+
+        vvlo(+1:+5) = 0.d0
+        vvhi(+1:+5) = 0.d0
+
     !------------- remap FDAT from XPOS to XNEW using FHAT !
 
         kmin = +1 ; kmax = +1
